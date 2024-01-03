@@ -1,8 +1,40 @@
 const express = require("express");
 const app = express();
 const port = process.env.PORT || 3001;
+const sendMessageToSlack = async (message) => {
+  const webhookUrl = process.env.SLACK_WEBHOOK_URL; // Use the environment variable
+  try {
+    if (!webhookUrl) {
+      throw new Error('Slack webhook URL not provided.');
+    }
+
+    await fetch(webhookUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ text: message }),
+    });
+
+    console.log('Message sent to Slack!');
+  } catch (error) {
+    console.error('Error sending message to Slack:', error.message);
+  }
+};
 
 app.get("/", (req, res) => res.type('html').send(html));
+
+app.post('/send', (req, res) => {
+  const { message } = req.body;
+
+  if (!message) {
+    return res.status(400).json({ error: 'Message is required' });
+  }
+
+  sendMessageToSlack(message);
+
+  res.json({ success: true, message: 'Message sent to Slack!' });
+});
 
 const server = app.listen(port, () => console.log(`Example app listening on port ${port}!`));
 
