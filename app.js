@@ -1,42 +1,53 @@
 const express = require("express");
+const bodyParser = require("body-parser");
+const cors = require("cors"); // Import the cors middleware
+const fetch = require("node-fetch");
+
 const app = express();
 const port = process.env.PORT || 3001;
+
 const sendMessageToSlack = async (message) => {
-  const webhookUrl = process.env.SLACK_WEBHOOK_URL; // Use the environment variable
+  const webhookUrl = process.env.SLACK_WEBHOOK_URL;
+
   try {
     if (!webhookUrl) {
-      throw new Error('Slack webhook URL not provided.');
+      throw new Error("Slack webhook URL not provided.");
     }
 
     await fetch(webhookUrl, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({ text: message }),
     });
 
-    console.log('Message sent to Slack!');
+    console.log("Message sent to Slack!");
   } catch (error) {
-    console.error('Error sending message to Slack:', error.message);
+    console.error("Error sending message to Slack:", error.message);
   }
 };
 
-app.get("/", (req, res) => res.type('html').send(html));
+app.use(cors()); // Enable CORS for all routes
+app.use(bodyParser.json());
 
-app.post('/send', (req, res) => {
+app.get("/", (req, res) => res.type("html").send(html));
+
+app.post("/send", (req, res) => {
   const { message } = req.body;
 
   if (!message) {
-    return res.status(400).json({ error: 'Message is required' });
+    return res.status(400).json({ error: "Message is required" });
   }
 
   sendMessageToSlack(message);
 
-  res.json({ success: true, message: 'Message sent to Slack!' });
+  res.json({ success: true, message: "Message sent to Slack!" });
 });
 
-const server = app.listen(port, () => console.log(`Example app listening on port ${port}!`));
+const server = app.listen(port, () =>
+  console.log(`Example app listening on port ${port}!`)
+);
 
 server.keepAliveTimeout = 120 * 1000;
 server.headersTimeout = 120 * 1000;
@@ -90,4 +101,4 @@ const html = `
     </section>
   </body>
 </html>
-`
+`;
